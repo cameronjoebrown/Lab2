@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>Utah Weather</title>
+        <link rel="stylesheet" href="main.css">
+        <meta charset="UTF-8">
+        <meta name="description" content="A website with the weather of all cities in Utah.">
+        <meta name="keywords" content="Utah, Weather, Cameron Brown">
+        <meta name="author" content="Cameron Brown">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+
+        <script src="http://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                $("#cityField").keyup(function() {
+                    var url = "http://bioresearch.byu.edu/cs260/jquery/getcity.cgi?q=" + $("#cityField").val();
+                    $.getJSON(url, function(data) {
+                        var everything;
+                        everything = "<ul>";
+                        $.each(data, function(i, item) {
+                            everything += "<li> " + data[i].city;
+                        });
+                        everything += "</ul>";
+                        $("#txtHint").html(everything);
+                    })
+                        .done(function() { console.log('getJSON request succeeded!'); })
+                        .fail(function(jqXHR, textStatus, errorThrown) {
+                        console.log('getJSON request failed! ' + textStatus);
+                        console.log("incoming " + jqXHR.responseText);
+                    })
+                        .always(function() {
+                        console.log('getJSON request ended!');
+                    });
+                });
+                $("#weatherButton").click(function(e) {
+                    var value = $("#cityField").val();
+                    console.log(value);
+                    e.preventDefault();
+                    var myurl = "https://api.openweathermap.org/data/2.5/weather?units=imperial&appid=beaad74b73b9d7cf4029b9e941c12b87&q=";
+                    myurl += value;
+                    console.log(myurl);
+                    $.ajax({
+                        url: myurl,
+                        dataType: "json",
+                        success: function(parsed_json) {
+                            console.log(parsed_json);
+                            var location = parsed_json['name'];
+                            var weather = parsed_json['weather'][0]['main'];
+                            var temp = parsed_json['main']['temp'];
+                            var weather_icon = parsed_json['weather'][0]['icon'];
+                            var humidity = parsed_json['main']['humidity'];
+                            var temp_min = parsed_json['main']['temp_min'];
+                            var temp_max = parsed_json['main']['temp_max'];
+                            var wind_speed = parsed_json['wind']['speed'];
+                            everything = "<img src=\"http://openweathermap.org/img/w/" + weather_icon + ".png\"/>"
+                            everything += "<ul>";
+                            everything += "<li>Location: " + location;
+                            everything += "<li>Weather: " + weather + " (" + temp + "&#8457;)";
+                            everything += "<li>Low: " + temp_min + "&#8457; | High: " + temp_max + "&#8457;";
+                            everything += "<li>Humidity: " + humidity + "%";
+                            everything += "<li>Wind: " + wind_speed + " mph";
+                            everything += "</ul>";
+                            $("#weather").html(everything);
+                        }
+                    });
+
+                    $("#displayCity").text(value);
+                });
+
+                $("#stackSearch").click(function(e) {
+                    e.preventDefault();
+                    var value = $("#questionField").val();
+                    var myurl = "https://api.stackexchange.com/2.2/search?order=desc&sort=activity&intitle=" + value + "&site=stackoverflow"
+                    $.ajax({
+                        url: myurl,
+                        dataType: "json",
+                        success: function(parsed_json) {
+
+                            if (parsed_json['items'].length > 0) {
+                                var everything = "<ul>";
+                                for (var i = 0; i < parsed_json['items'].length; i++) {
+                                    everything += "<li><a href=" + parsed_json['items'][i]['link'] + ">" + parsed_json['items'][i]['title'] + "</a></li>";
+                                }
+                                everything += "</ul>"
+                                $("#answers").html(everything);
+                            }
+                            else {
+                                $("#answers").html("No results");
+                            }
+
+                        }
+                    });
+
+                });
+
+            });
+        </script>
+    </head>
+
+    <body>
+        <header>
+            <h1>Utah Weather and StackExchange Help</h1>
+        </header>
+        
+        <h2>Utah Weather</h2>
+        <form>
+            Enter A Utah City:
+            <br>
+            <input type="text" id="cityField" value="">
+            <br> 
+            Suggestion: 
+            <span id="txtHint"></span>
+            <br>
+            <input id="weatherButton" type="submit" value="Submit">
+        </form>
+        <h3>City</h3>
+        <textarea id="displayCity">No City</textarea>
+        <p>Current Weather</p>
+        <div id="weather">No weather</div>
+
+        <div id="outerStack">
+            <div id="innerStack">
+                <h2>StackExchange Search</h2>
+                <hr>
+                <form>
+                    What's your StackExchange Question?
+                    <br>
+                    <input type="text" id="questionField" value="">
+                    <br>
+                    <input id="stackSearch" type="submit" value="Submit">
+                </form>
+                <p id="answers"></p>
+            </div>
+        </div>
+    </body>
+
+</html>
